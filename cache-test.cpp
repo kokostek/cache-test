@@ -5,27 +5,27 @@
  *
  * Example output on i9-9900K (32+32KB L1, 256KB L2, 16MB Smart Cache), with
  * comments:
- *   size_in_bytes     ticks_per_item          result
- *   ------------------------------------------------
- *   1024                     3.93812              50
- *   2048                     3.90921             100
- *   4096                     3.91112              97
- *   8192                     3.91105             928
- *   16384                    3.91337              51
- *   32768                    3.96422            3803  // 32KB L1
- *   65536                    7.02569            3288
- *   131072                   10.8894            2137
- *   262144                   14.6336           21127  // 256KB L2
- *   524288                   25.6436           54523
- *   1048576                  33.0112          124363
- *   2097152                  30.2302           81499
- *   4194304                  31.6043            8934
- *   8388608                  37.1856          626178
- *   16777216                  119.13          670803  // 16MB Smart
- *   33554432                 194.757         3736844
- *   67108864                 217.386         7939310
- *   134217728                234.904        16688526
- *   268435456                234.535         1792626
+ * size_in_bytes     ticks_per_item
+ * --------------------------------
+ *  1024                      3.7907
+ *  2048                     3.86114
+ *  4096                     3.84755
+ *  8192                     3.76617
+ *  16384                     3.7394
+ *  32768                    3.72742  // 32KB L1
+ *  65536                    6.51552
+ *  131072                   7.83066
+ *  262144                   13.2395  // 256KB L2
+ *  524288                   25.9217
+ *  1048576                  33.7032
+ *  2097152                  32.1329
+ *  4194304                  33.8009
+ *  8388608                  34.3796
+ *  16777216                 57.5418  // 16MB Smart
+ *  33554432                 154.609
+ *  67108864                 184.766
+ *  134217728                219.106
+ *  268435456                230.216
  */
 
 #include <chrono>
@@ -90,7 +90,6 @@ int main(const int argc, const char *argv[]) {
   std::cout
     << std::left << std::setw(colw) << "size_in_bytes"
     << std::right << std::setw(colw) << "ticks_per_item"
-    << std::right << std::setw(colw) << "result"
     << std::endl;
   /* clang-format on */
 
@@ -98,11 +97,12 @@ int main(const int argc, const char *argv[]) {
   std::cout
     << std::setfill('-') << std::setw(colw) << ""
     << std::setfill('-') << std::setw(colw) << ""
-    << std::setfill('-') << std::setw(colw) << ""
     << std::endl;
   /* clang-format on */
 
   std::cout << std::setfill(' ');
+
+  size_t result = 0;
 
   for (const auto sz : sizes) {
 
@@ -128,7 +128,7 @@ int main(const int argc, const char *argv[]) {
       num_hops = elems;
 
     const auto start_tick = __rdtsc();
-    const auto result = hop_read(items, num_hops);
+    result += hop_read(items, num_hops);
     const auto total_ticks = __rdtsc() - start_tick;
     const auto ticks_per_item = (double)total_ticks / num_hops;
 
@@ -136,11 +136,12 @@ int main(const int argc, const char *argv[]) {
     std::cout
       << std::left << std::setw(colw) << sz
       << std::right << std::setw(colw) << ticks_per_item
-      /* priting this, so compiler does not optimize away the loop: */
-      << std::right << std::setw(colw) << result
       << std::endl;
     // clang-format on
   }
+
+  /* priting this, so compiler does not optimize away the loop: */
+  std::cout << "(result: " << result << ")" << std::endl;
 
   return 0;
 }
